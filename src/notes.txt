@@ -1,0 +1,24 @@
+'sql-exampleorg' => array(
+  'sqlauth:SQL',
+  'dsn' => 'mysql:host=localhost;dbname=simplesaml',
+  'username' => 'userdb',
+  'password' => 'secretpassword',
+  'query' => 'SELECT users.uid, givenName, email, eduPersonPrincipalName, groupname AS groups FROM users LEFT JOIN usergroups ON users.uid = usergroups.username WHERE users.uid = :username AND PASSWORD = SHA2(CONCAT((SELECT salt FROM users WHERE uid = :username), :password),256)',
+),
+
+SELECT users.uid, givenName, email, eduPersonPrincipalName, groupname AS groups
+FROM users LEFT JOIN usergroups ON users.uid = usergroups.username
+WHERE users.uid = :username
+AND PASSWORD = SHA2(
+    CONCAT(
+        (SELECT salt FROM users WHERE uid = :username),
+        :password
+    ),
+    256
+)
+
+openssl genrsa -des3 -out aws_idp.key 1024
+openssl rsa -in aws_idp.key -out aws_idp.pem
+openssl req -new -key aws_idp.key -out aws_idp.csr
+openssl x509 -req -days 9999 -in aws_idp.csr -signkey aws_idp.key -out aws_idp.crt
+
